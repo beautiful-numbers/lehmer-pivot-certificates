@@ -54,7 +54,7 @@ This checks that the artefacts in `certificates/` are exactly the ones published
 
 ```bash
 cd certificates
-sha256sum -c manifest.sha256
+sha256sum -c manifest.sha256```
 
 Expected result: every line ends with `OK`.
 
