@@ -1,0 +1,53 @@
+﻿Pivot-only table (Appendix A)
+mreq_mode=exact  (prec=90, ln1p_terms=18, ln2_terms=30)
+y in [3,200], prime_limit=1000000
++-----+-------------+---------+
+| y   | mreq_status | mreq(y) |
++-----+-------------+---------+
+| 3   | OK_EXACT    | 3       |
+| 5   | OK_EXACT    | 7       |
+| 7   | OK_EXACT    | 15      |
+| 11  | OK_EXACT    | 27      |
+| 13  | OK_EXACT    | 41      |
+| 17  | OK_EXACT    | 62      |
+| 19  | OK_EXACT    | 85      |
+| 23  | OK_EXACT    | 115     |
+| 29  | OK_EXACT    | 150     |
+| 31  | OK_EXACT    | 186     |
+| 37  | OK_EXACT    | 229     |
+| 41  | OK_EXACT    | 274     |
+| 43  | OK_EXACT    | 323     |
+| 47  | OK_EXACT    | 380     |
+| 53  | OK_EXACT    | 443     |
+| 59  | OK_EXACT    | 509     |
+| 61  | OK_EXACT    | 577     |
+| 67  | OK_EXACT    | 653     |
+| 71  | OK_EXACT    | 733     |
+| 73  | OK_EXACT    | 818     |
+| 79  | OK_EXACT    | 912     |
+| 83  | OK_EXACT    | 1010    |
+| 89  | OK_EXACT    | 1114    |
+| 97  | OK_EXACT    | 1222    |
+| 101 | OK_EXACT    | 1331    |
+| 103 | OK_EXACT    | 1448    |
+| 107 | OK_EXACT    | 1572    |
+| 109 | OK_EXACT    | 1704    |
+| 113 | OK_EXACT    | 1845    |
+| 127 | OK_EXACT    | 1994    |
+| 131 | OK_EXACT    | 2138    |
+| 137 | OK_EXACT    | 2289    |
+| 139 | OK_EXACT    | 2445    |
+| 149 | OK_EXACT    | 2609    |
+| 151 | OK_EXACT    | 2774    |
+| 157 | OK_EXACT    | 2948    |
+| 163 | OK_EXACT    | 3127    |
+| 167 | OK_EXACT    | 3311    |
+| 173 | OK_EXACT    | 3502    |
+| 179 | OK_EXACT    | 3699    |
+| 181 | OK_EXACT    | 3900    |
+| 191 | OK_EXACT    | 4112    |
+| 193 | OK_EXACT    | 4324    |
+| 197 | OK_EXACT    | 4546    |
+| 199 | OK_EXACT    | 4775    |
++-----+-------------+---------+
+sha256=e16ce9e4669d559d63322ba12ed089414d62b4f43374d930eaf5ae6d8a4aead3
