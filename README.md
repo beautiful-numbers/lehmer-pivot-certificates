@@ -161,7 +161,7 @@ from this scan; the global large-y exclusion comes from the analytic Case B argu
 
 Accordingly, only a single canonical scan output is included:
 
-## D1. `certificates/caseB_scans/appB_caseB.txt`
+## D1. `certificates/appendixD/caseB_sanity_scan.txt`
 
 **What it contains.**  
 Representative scan output on a finite interval, recording the evaluated expressions and pass/fail conditions.
