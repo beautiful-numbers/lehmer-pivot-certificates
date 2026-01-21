@@ -37,7 +37,7 @@ All computations use **exact rational / integer arithmetic** where needed and pr
   - `certificates/mreq/mreq_exact_3_to_30000_L50000000.txt`
 
 - **Appendix D (Case B finite sanity scan; explicitly non-logical)**  
-  - `certificates/caseB_scans/appB_caseB.txt`
+  - `certificates/appendixD/caseB_sanity_scan.txt`
 
 Everything else (extra prime-limit variants, eps-variants) is **optional** and can be kept out to avoid clutter.
 
