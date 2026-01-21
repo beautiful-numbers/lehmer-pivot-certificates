@@ -33,7 +33,8 @@ All computations use **exact rational / integer arithmetic** where needed and pr
   - `certificates/appendixA/pivot_only_y3_200.txt`  
   - `certificates/appendixA/pivotA_proof_Y0=30000.txt`
 
-- **Appendix A.4 (small range 3 ≤ y < Y0 exact table)**  
+- **Appendix A.4 (small range 3 ≤ y < Y0 exact table)**
+  - `certificates/mreq/mreq_exact_primes_3_to_30000.txt`
   - `certificates/mreq/mreq_exact_3_to_30000_L50000000.txt`
 
 - **Appendix D (Case B finite sanity scan; explicitly non-logical)**  
