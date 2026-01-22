@@ -13,14 +13,78 @@ from __future__ import annotations
 import argparse
 import math
 import time
+import os
+import json
+import hashlib
+import re
 from array import array
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 
-# ---------------------------
-# Prime sieve
-# ---------------------------
+def _ensure_parent_dir(path: str) -> None:
+    d = os.path.dirname(path)
+    if d:
+        os.makedirs(d, exist_ok=True)
+
+
+def _load_mreq_table(path: str) -> Dict[int, int]:
+    tab: Dict[int, int] = {}
+
+    def parse_lines(lines: List[str]) -> None:
+        nonlocal tab
+        for raw in lines:
+            line = raw.strip()
+            if not line:
+                continue
+            low = line.lower()
+            if "sha256" in low:
+                continue
+            nums = re.findall(r"\d+", line)
+            if len(nums) >= 2:
+                y = int(nums[0])
+                m = int(nums[1])
+                tab[y] = m
+
+    for enc in ("utf-8", "utf-16", "utf-8-sig", "latin-1"):
+        try:
+            with open(path, "r", encoding=enc) as f:
+                parse_lines(f.readlines())
+            if tab:
+                return tab
+        except UnicodeDecodeError:
+            tab = {}
+            continue
+
+    return tab
+
+
+class _Transcript:
+    def __init__(self, path: Optional[str]):
+        self.path = path
+        self.f = None
+        self.h = hashlib.sha256()
+        if path:
+            _ensure_parent_dir(path)
+            self.f = open(path, "w", encoding="utf-8", newline="\n")
+
+    def write(self, obj: Dict) -> None:
+        if not self.f:
+            return
+        s = json.dumps(obj, sort_keys=True, separators=(",", ":"))
+        self.f.write(s + "\n")
+        self.h.update((s + "\n").encode("utf-8"))
+
+    def digest_hex(self) -> Optional[str]:
+        if not self.f:
+            return None
+        return self.h.hexdigest()
+
+    def close(self) -> None:
+        if self.f:
+            self.f.close()
+            self.f = None
+
 
 def sieve_primes_upto(n: int) -> List[int]:
     if n < 2:
@@ -31,19 +95,17 @@ def sieve_primes_upto(n: int) -> List[int]:
         if bs[p]:
             step = p
             start = p * p
-            bs[start:n+1:step] = b"\x00" * (((n - start) // step) + 1)
+            bs[start:n + 1:step] = b"\x00" * (((n - start) // step) + 1)
     return [i for i in range(2, n + 1) if bs[i]]
 
-
-# ---------------------------
-# Basic NT helpers
-# ---------------------------
 
 def gcd(a: int, b: int) -> int:
     return math.gcd(a, b)
 
+
 def lcm(a: int, b: int) -> int:
     return a // gcd(a, b) * b
+
 
 def is_squarefree_by_trial(n: int) -> bool:
     if n % 4 == 0:
@@ -56,6 +118,7 @@ def is_squarefree_by_trial(n: int) -> bool:
                 return False
         p += 2
     return True
+
 
 def factor_squarefree(n: int) -> List[int]:
     fac = []
@@ -73,11 +136,13 @@ def factor_squarefree(n: int) -> List[int]:
         fac.append(n)
     return fac
 
+
 def phi_squarefree(fac: List[int]) -> int:
     out = 1
     for p in fac:
         out *= (p - 1)
     return out
+
 
 def is_lehmer_candidate_squarefree(n: int) -> bool:
     if n < 9:
@@ -92,10 +157,6 @@ def is_lehmer_candidate_squarefree(n: int) -> bool:
     phi = phi_squarefree(fac)
     return ((n - 1) % phi) == 0
 
-
-# ---------------------------
-# Pretty table printer
-# ---------------------------
 
 def print_table(rows: List[Dict[str, str]]) -> None:
     if not rows:
@@ -113,10 +174,6 @@ def print_table(rows: List[Dict[str, str]]) -> None:
         print(line)
     print(sep)
 
-
-# ============================================================
-# MODE 1: linear sieve window verifier (fast, exhaustive window)
-# ============================================================
 
 def sieve_phi_spf_squarefree(N: int) -> Tuple[array, array, bytearray, List[int]]:
     spf = array("I", [0]) * (N + 1)
@@ -163,6 +220,14 @@ def mreq_for_y_log(y: int, primes: List[int]) -> int:
         if s > log2:
             return m
     raise ValueError("prime list too short for mreq(y)")
+
+
+def mreq_lower_bound(y: int) -> int:
+    if y < 3:
+        raise ValueError("y must be >= 3")
+    log2 = math.log(2.0)
+    denom = math.log1p(1.0 / (y - 1))
+    return 1 + int(log2 / denom)
 
 
 def run_mode_sieve(Ny: int, y_min: int, y_max: int, show_hits: bool) -> None:
@@ -215,10 +280,6 @@ def run_mode_sieve(Ny: int, y_min: int, y_max: int, show_hits: bool) -> None:
     print(f"Total elapsed: {time.time() - t0:.3f}s")
 
 
-# ============================================================
-# MODE 2: lock engine with vector pivot + inheritance
-# ============================================================
-
 @dataclass
 class LockStats:
     states: int = 0
@@ -230,6 +291,7 @@ class LockStats:
     exact_checked: int = 0
     found: int = 0
 
+
 @dataclass
 class KStats:
     seen: int = 0
@@ -239,6 +301,7 @@ class KStats:
     min_P: float = 1e99
     min_logL: float = 1e99
     max_logL: float = -1e99
+
 
 def small_factor_counts(x: int, small_primes: List[int]) -> Dict[int, int]:
     out: Dict[int, int] = {}
@@ -251,6 +314,7 @@ def small_factor_counts(x: int, small_primes: List[int]) -> Dict[int, int]:
     if x > 1 and x in small_primes:
         out[x] = out.get(x, 0) + 1
     return out
+
 
 def run_lock_for_y(
     Ny: int,
@@ -268,20 +332,56 @@ def run_lock_for_y(
     inh_small_primes_max: int,
     inh_top: int,
     dump_kstats: bool,
+    mreq_override: Optional[int] = None,
+    transcript: Optional[_Transcript] = None,
 ) -> Tuple[LockStats, Optional[int], int, int, Dict[int, KStats]]:
     st = LockStats()
     log2 = math.log(2.0)
 
-    mreq = mreq_for_y_log(y, primes)
     Wy = int(math.log(Ny) / math.log(y))
+    mreq_lb = mreq_lower_bound(y)
+
+    if mreq_override is not None:
+        mreq = mreq_override
+        mreq_src = "table"
+    else:
+        if mreq_lb > Wy:
+            mreq = mreq_lb
+            mreq_src = "lb_prune"
+        else:
+            try:
+                mreq = mreq_for_y_log(y, primes)
+                mreq_src = "primewalk"
+            except ValueError as e:
+                raise ValueError(
+                    f"{e} at y={y}. Increase --prime_limit (and/or --Ny) or provide --mreq_table covering y={y}."
+                )
 
     kstats: Dict[int, KStats] = {k: KStats() for k in range(1, frontier_kmax + 1)}
 
+    if transcript is not None:
+        transcript.write({
+            "type": "Y_START",
+            "y": y,
+            "Ny": Ny,
+            "eps": eps,
+            "Wy": Wy,
+            "mreq_lb": mreq_lb,
+            "mreq": mreq,
+            "mreq_src": mreq_src,
+            "max_enum_t": max_enum_t,
+            "max_states": max_states,
+        })
+
     if mreq > Wy:
+        if transcript is not None:
+            transcript.write({"type": "Y_END", "y": y, "reason": "mreq>Wy", "mreq": mreq, "Wy": Wy, "mreq_src": mreq_src})
         return st, None, mreq, Wy, kstats
 
     P = [p for p in primes if p >= y and p <= Ny]
     if not P or P[0] != y:
+        if transcript is not None:
+            transcript.write({"type": "Y_END", "y": y, "reason": "prime_list_missing_y"})
         return st, None, mreq, Wy, kstats
 
     gain = [math.log(p) - math.log(p - 1) for p in P]
@@ -305,10 +405,8 @@ def run_lock_for_y(
             j += 1
         return prod
 
-    # Frontier grid: key=(k, bn, bL) -> best logI with representative nS,L
     frontier: Dict[Tuple[int, int, int], Tuple[float, int, int]] = {}
 
-    # Inheritance stats
     R_hist: Dict[int, int] = {}
     prime_add_hist: Dict[int, int] = {}
     small_primes = [p for p in primes if p <= inh_small_primes_max]
@@ -320,7 +418,6 @@ def run_lock_for_y(
             return
         ln = math.log(nS)
         lL = math.log(L) if L > 0 else 0.0
-        # bins in [0, log Ny] and [0, log Ny] conservatively
         bn = min(frontier_bins_n - 1, int((ln / math.log(Ny)) * frontier_bins_n))
         bL = min(frontier_bins_L - 1, int((lL / math.log(Ny)) * frontier_bins_L))
         key = (k, bn, bL)
@@ -355,12 +452,10 @@ def run_lock_for_y(
         R = L_new // L_old
         if R > 1:
             R_hist[R] = R_hist.get(R, 0) + 1
-            # count small primes contributed by R (rough view of new prime-power coverage)
             counts = small_factor_counts(R, small_primes)
             for q, e in counts.items():
                 prime_add_hist[q] = prime_add_hist.get(q, 0) + e
 
-    # State: (next_index, k, nS, L, logI)
     n0 = y
     L0 = y - 1
     logI0 = gain[0]
@@ -371,10 +466,21 @@ def run_lock_for_y(
     while stack:
         i, k, nS, L, logI = stack.pop()
         st.states += 1
+
+        if transcript is not None and (st.states == 1 or (st.states % 200000 == 0)):
+            transcript.write({
+                "type": "PROGRESS",
+                "y": y,
+                "states": st.states,
+                "k": k,
+                "nS": int(nS),
+                "L": int(L),
+                "logI": float(logI),
+            })
+
         if st.states > max_states:
             break
 
-        # track pivot vector samples
         update_frontier(k, nS, L, logI)
         update_kstats(k, nS, L, logI)
 
@@ -399,11 +505,12 @@ def run_lock_for_y(
             st.pr_gcd += 1
             continue
 
-        # saturation closure
         if k >= 2 and L > 1 and nS > 1:
             Ppot = math.log(L) / math.log(nS)
             if Ppot > 1.0 - eps:
                 tmax = (Ny - 1) // L
+                if transcript is not None:
+                    transcript.write({"type": "SAT_ENUM", "y": y, "k": k, "nS": int(nS), "L": int(L), "tmax": int(tmax)})
                 if tmax <= max_enum_t:
                     for t in range(1, tmax + 1):
                         n = 1 + t * L
@@ -414,21 +521,25 @@ def run_lock_for_y(
                         if is_lehmer_candidate_squarefree(n):
                             found = n
                             st.found += 1
+                            if transcript is not None:
+                                transcript.write({"type": "FOUND", "y": y, "kind": "sat_enum", "n": int(found), "k": k, "nS": int(nS), "L": int(L), "t": int(t)})
                             break
                     if found is not None:
                         break
                     st.pr_sat += 1
                     continue
 
-        # exact check on nS itself (support-complete candidate)
         if k >= 2 and logI > log2 + 1e-15:
             st.exact_checked += 1
+            if transcript is not None:
+                transcript.write({"type": "EXACT_CHECK", "y": y, "k": k, "nS": int(nS), "L": int(L), "logI": float(logI)})
             if is_lehmer_candidate_squarefree(nS):
                 found = nS
                 st.found += 1
+                if transcript is not None:
+                    transcript.write({"type": "FOUND", "y": y, "kind": "nS_exact", "n": int(found), "k": k, "nS": int(nS), "L": int(L)})
                 break
 
-        # expand inclusions (combinations)
         for j in range(i, len(P)):
             p = P[j]
             n2 = nS * p
@@ -440,10 +551,8 @@ def run_lock_for_y(
             logI2 = logI + gain[j]
             stack.append((j + 1, k + 1, n2, L2, logI2))
 
-    # Print dumps for this y (only when y-range is tight or user wants it)
     if dump_frontier:
         rows = []
-        # collect best representatives sorted by logI desc
         items = sorted(frontier.items(), key=lambda kv: kv[1][0], reverse=True)
         for (k0, bn, bL), (logI_v, n_v, L_v) in items[:frontier_top]:
             rows.append({
@@ -453,7 +562,7 @@ def run_lock_for_y(
                 "logI": f"{logI_v:.6f}",
                 "nS": str(n_v),
                 "L": str(L_v),
-                "P": f"{(math.log(L_v)/math.log(n_v) if n_v>1 and L_v>1 else 0.0):.4f}",
+                "P": f"{(math.log(L_v) / math.log(n_v) if n_v > 1 and L_v > 1 else 0.0):.4f}",
             })
         print(f"\n[frontier] y={y}  (grid {frontier_bins_n}x{frontier_bins_L}, k<= {frontier_kmax}), top {frontier_top}")
         print_table(rows)
@@ -478,19 +587,34 @@ def run_lock_for_y(
         print_table(rows)
 
     if dump_inheritance:
-        # Top R ratios
         rowsR = []
         for R, c in sorted(R_hist.items(), key=lambda x: x[1], reverse=True)[:inh_top]:
             rowsR.append({"R": str(R), "count": str(c)})
         print(f"\n[inheritance] y={y}  Top R = lcm(L,p-1)/L (top {inh_top})")
         print_table(rowsR)
 
-        # Top small primes added (rough)
         rowsQ = []
         for q, c in sorted(prime_add_hist.items(), key=lambda x: x[1], reverse=True)[:inh_top]:
             rowsQ.append({"q": str(q), "added_exp_total": str(c)})
         print(f"\n[inheritance] y={y}  Small prime-power mass added to L via R (q<= {inh_small_primes_max}, top {inh_top})")
         print_table(rowsQ)
+
+    if transcript is not None:
+        transcript.write({
+            "type": "Y_END",
+            "y": y,
+            "found": int(found) if found is not None else None,
+            "stats": {
+                "states": st.states,
+                "pr_cap": st.pr_cap,
+                "pr_ub": st.pr_ub,
+                "pr_size": st.pr_size,
+                "pr_gcd": st.pr_gcd,
+                "pr_sat": st.pr_sat,
+                "exact_checked": st.exact_checked,
+                "found_count": st.found,
+            },
+        })
 
     return st, found, mreq, Wy, kstats
 
@@ -512,6 +636,9 @@ def run_mode_lock(
     inh_small_primes: int,
     inh_top: int,
     dump_kstats: bool,
+    emit_transcript: Optional[str] = None,
+    emit_summary: Optional[str] = None,
+    mreq_table: Optional[str] = None,
 ) -> None:
     t0 = time.time()
     primes = sieve_primes_upto(min(prime_limit, Ny))
@@ -519,8 +646,18 @@ def run_mode_lock(
 
     y_list = [p for p in primes if p >= 3 and y_min <= p <= y_max]
 
+    mreq_tab: Optional[Dict[int, int]] = None
+    if mreq_table:
+        mreq_tab = _load_mreq_table(mreq_table)
+
+    tr = _Transcript(emit_transcript)
+
     rows = []
     for y in y_list:
+        mreq_override = None
+        if mreq_tab is not None and y in mreq_tab:
+            mreq_override = mreq_tab[y]
+
         st, found, mreq, Wy, _ = run_lock_for_y(
             Ny=Ny,
             y=y,
@@ -537,6 +674,8 @@ def run_mode_lock(
             inh_small_primes_max=inh_small_primes,
             inh_top=inh_top,
             dump_kstats=dump_kstats,
+            mreq_override=mreq_override,
+            transcript=tr,
         )
 
         rows.append({
@@ -560,10 +699,31 @@ def run_mode_lock(
     print_table(rows)
     print(f"Total elapsed: {time.time() - t0:.3f}s")
 
+    transcript_sha256 = tr.digest_hex()
+    tr.close()
 
-# ---------------------------
-# CLI
-# ---------------------------
+    if emit_summary:
+        _ensure_parent_dir(emit_summary)
+        payload = {
+            "tool": "lehmer_bnb.py",
+            "mode": "lock",
+            "params": {
+                "Ny": Ny,
+                "y_min": y_min,
+                "y_max": y_max,
+                "eps": eps,
+                "prime_limit": prime_limit,
+                "max_enum_t": max_enum_t,
+                "max_states": max_states,
+                "mreq_table": mreq_table,
+                "emit_transcript": emit_transcript,
+            },
+            "transcript_sha256": transcript_sha256,
+        }
+        with open(emit_summary, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(payload, f, indent=2, sort_keys=True)
+            f.write("\n")
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Lehmer finite-window verifier + vector-pivot lock-engine.")
@@ -572,16 +732,13 @@ def main() -> None:
     ap.add_argument("--y_min", type=int, default=3)
     ap.add_argument("--y_max", type=int, default=97)
 
-    # sieve mode
     ap.add_argument("--show_hits", action="store_true")
 
-    # lock mode core
     ap.add_argument("--eps", type=float, default=0.08)
     ap.add_argument("--prime_limit", type=int, default=10_000_000)
     ap.add_argument("--max_enum_t", type=int, default=250000)
     ap.add_argument("--max_states", type=int, default=2_000_000)
 
-    # lock dumps
     ap.add_argument("--dump_frontier", action="store_true")
     ap.add_argument("--frontier_bins_n", type=int, default=60)
     ap.add_argument("--frontier_bins_L", type=int, default=60)
@@ -593,6 +750,10 @@ def main() -> None:
     ap.add_argument("--inh_top", type=int, default=30)
 
     ap.add_argument("--dump_kstats", action="store_true")
+
+    ap.add_argument("--mreq_table", type=str, default=None)
+    ap.add_argument("--emit_transcript", type=str, default=None)
+    ap.add_argument("--emit_summary", type=str, default=None)
 
     args = ap.parse_args()
 
@@ -616,6 +777,9 @@ def main() -> None:
             inh_small_primes=args.inh_small_primes,
             inh_top=args.inh_top,
             dump_kstats=args.dump_kstats,
+            emit_transcript=args.emit_transcript,
+            emit_summary=args.emit_summary,
+            mreq_table=args.mreq_table,
         )
 
 
