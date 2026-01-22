@@ -1,0 +1,16 @@
+{
+  "mode": "lock",
+  "params": {
+    "Ny": 10000000,
+    "emit_transcript": ".\\certificates\\appendixC\\transcript.jsonl",
+    "eps": 0.08,
+    "max_enum_t": 250000,
+    "max_states": 2000000,
+    "mreq_table": ".\\certificates\\mreq\\mreq_exact_primes_3_to_30000.utf8.txt",
+    "prime_limit": 10000000,
+    "y_max": 30000,
+    "y_min": 3
+  },
+  "tool": "lehmer_bnb.py",
+  "transcript_sha256": "c8c13b7d0eb736d639f6346246e5afeea80d1302b84fadedb71824fd2668d9db"
+}
