@@ -138,11 +138,11 @@ python3 code/compute_Y1.py \
   --C1 1e-3 \
   --prec 120 \
   --ln2_terms 40 \
-  --mertens_ref "(use the exact reference string cited in the paper)" \
+  --mertens_ref "Lemma A.2 (Explicit two-sided reciprocal-prime bound), eqs. (48)–(49)"
   --mertens_x0 55 \
   --mertens_B1 0.2614972128 \
   --mertens_c 1.0 \
-  --nthprime_ref "(use the exact reference string cited in the paper)" \
+  --nthprime_ref "Lemma A.3 (Explicit upper bound for the n-th prime), eq. (50)"
   --nthprime_n0 6 \
   > certificates/appendixA/pivotA_proof_Y0=30000.txt
 
