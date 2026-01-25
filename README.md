@@ -216,7 +216,7 @@ python3 code/compute_Y1.py \
   --mreq_mode hybrid \
   --Y0 30000 --C1 1e-3 \
   --prime_limit 1000000 \
-  > certificates/caseB_scans/appB_caseB.txt
+  > certificates/appendixD/caseB_sanity_scan.txt
 
 ```
 ## About `lehmer_bnb.py` (finite verification infrastructure)
