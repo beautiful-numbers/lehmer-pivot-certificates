@@ -113,7 +113,7 @@ python3 code/compute_Y1.py \
   --mode pivot_only \
   --y_min 3 --y_max 200 \
   --mreq_mode exact \
-  --prime_limit 1000000 
+  --prime_limit 1000000 \
   > certificates/appendixA/pivot_only_y3_200.txt
 ```
 
@@ -143,9 +143,9 @@ python3 code/compute_Y1.py \
   --mertens_B1 0.2614972128 \
   --mertens_c 1.0 \
   --nthprime_ref "(use the exact reference string cited in the paper)" \
-  --nthprime_n0 6 
-
+  --nthprime_n0 6 \
   > certificates/appendixA/pivotA_proof_Y0=30000.txt
+
 ```
 # Appendix A.4 — Small range 3 ≤ y < Y0 handled by exact tables
 
@@ -216,8 +216,8 @@ python3 code/compute_Y1.py \
   --mreq_mode hybrid \
   --Y0 30000 --C1 1e-3 \
   --prime_limit 1000000 \
-
   > certificates/caseB_scans/appB_caseB.txt
+
 ```
 ## About `lehmer_bnb.py` (finite verification infrastructure)
 
