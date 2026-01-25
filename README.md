@@ -251,21 +251,6 @@ All frozen artefacts in `certificates/` are covered by:
 Some artefacts also embed a `sha256=...` line inside the file output to make tampering detectable when files are
 copied out of the repository context.
 
-## Repository layout
-
-  compute_Y1.py
-  lehmer_bnb.py
-
-certificates/
-  manifest.sha256
-  appendixA/
-    pivot_only_y3_200.txt
-    pivotA_proof_Y0=30000.txt
-  mreq/
-    mreq_exact_3_to_30000_L50000000.txt
-  caseB_scans/
-    appB_caseB.txt
-
 ## License
 
 Code is released under the MIT License (see `LICENSE`).
