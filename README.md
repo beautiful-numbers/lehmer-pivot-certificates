@@ -12,6 +12,10 @@ This repository is designed for **referees**:
 
 All computations use **exact rational / integer arithmetic** where needed and print **auditable** intermediate values.
 
+The verification script verify_all.py deterministically checks (i) SHA256 integrity of all frozen artefacts, (ii) complete coverage of the Appendix C transcript for every prime 
+y∈[3,30000)
+y∈[3,30000) and (iii) the Appendix D routing discipline via the minimal routing checker; it outputs PASS if and only if all checks succeed.
+
 ---
 
 ## ✅ What’s included (curated)
