@@ -1,0 +1,16 @@
+{
+  "mode": "lock",
+  "params": {
+    "Ny": 10000000,
+    "emit_transcript": ".\\certificates\\appendixC\\transcript_replay.jsonl",
+    "eps": 0.08,
+    "max_enum_t": 250000,
+    "max_states": 2000000,
+    "mreq_table": null,
+    "prime_limit": 10000000,
+    "y_max": 30000,
+    "y_min": 3
+  },
+  "tool": "lehmer_bnb.py",
+  "transcript_sha256": "fbc9ee6da0c31cd38324561648402660cb27f2309a24a341158954590ad76060"
+}
