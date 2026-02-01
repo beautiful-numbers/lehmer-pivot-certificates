@@ -1,0 +1,16 @@
+{
+  "mode": "lock",
+  "params": {
+    "Ny": 10000000,
+    "emit_transcript": ".\\certificates\\appendixD\\routing_transcript.jsonl",
+    "eps": 0.08,
+    "max_enum_t": 250000,
+    "max_states": 2000000,
+    "mreq_table": ".\\mreq_exact_3_to_30000_L10000000.txt",
+    "prime_limit": 10000000,
+    "y_max": 30000,
+    "y_min": 3
+  },
+  "tool": "lehmer_bnb.py",
+  "transcript_sha256": "4b13bd8ca54168a6138f886ad58426cd113fdb9b313d3aeb1c99d9eba316e9ba"
+}
