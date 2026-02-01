@@ -79,6 +79,34 @@ Expected result: PASS (exit code 0).
 
 ---
 
+## Appendix D (routing / Case B discipline) verification package
+
+This repository also contains the *routing* artefacts for Appendix D (Case B gate discipline and mandatory handoff to Case C):
+
+- `certificates/appendixD/routing_transcript.jsonl`
+- `certificates/appendixD/routing_summary.json`
+- `code/caseB_minimal_checker.py`
+
+These files are covered by `certificates/manifest.sha256` and are verified by the same trust boundary as the main certificate package.
+
+### Verify routing artefacts
+
+1) Verify hashes (must be done first):
+
+```bash
+sha256sum -c certificates/manifest.sha256
+```
+2)Verify the routing transcript (structural / discipline checks):
+
+```bash
+python3 code/caseB_minimal_checker.py certificates/appendixD/routing_transcript.jsonl --Y2 30011
+```
+Expected result: PASS (exit code 0).
+
+`--Y2` is the upper bound for which the routing checker requires `handoff_caseC` for all primes `3 <= y < Y2`.
+Set it to the value used by the paper/release.
+
+
 ## Appendix-by-appendix: what each artefact proves and how to regenerate it
 
 This section explains **why each file exists** and **exactly which appendix claim it supports**.
