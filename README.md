@@ -1,3 +1,8 @@
+Important.
+The folder authoritative_paper/ records only the changes relative to the previous manuscript version.
+In the current authoritative paper, all logical dependencies belong to the manuscript itself.
+The scripts in this repository are preserved only as auxiliary audit artefacts and reproducibility aids; they play no normative role in the proof of the current version.
+
 # Lehmer Totient (Pivot Method) — Companion Code & Certificates
 
 Companion code and certificates for the paper:
